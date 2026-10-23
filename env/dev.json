@@ -1,0 +1,1 @@
+{"APP_ENV":"dev","API_BASE_URL":"","APP_LINK_HOST":"corteya.invalid","TODO":"API_BASE_URL vacío selecciona 10.0.2.2:8080 en Android y localhost:8080 en iOS. Sustituir APP_LINK_HOST en despliegue."}
