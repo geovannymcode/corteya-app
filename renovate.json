@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "timezone": "America/Bogota",
+  "schedule": ["* * * * 1"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Versiones mayores: requieren aprobación en el Dependency Dashboard",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Herramientas de Android: siempre con aprobación, Flutter puede no soportarlas aún",
+      "matchFileNames": ["android/**"],
+      "groupName": "android tooling",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Paquetes de Firebase juntos (cuando se agreguen en la fase 5/7)",
+      "matchPackageNames": ["/^firebase_/"],
+      "groupName": "firebase"
+    }
+  ]
+}

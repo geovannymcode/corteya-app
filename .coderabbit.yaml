@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "es-ES"
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  finishing_touches:
+    docstrings:
+      enabled: false
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "lib/**/*.dart"
+      instructions: |
+        - Ningún secreto en la app (llaves privadas, tokens de Meta o Wompi).
+          Solo la llave pública de Wompi puede vivir en el cliente.
+        - Mostrar horas en America/Bogota y convertir desde UTC del backend.
+        - Tokens de sesión solo en almacenamiento seguro (Keychain/Keystore), no en
+          shared_preferences.
+        - Textos visibles en español y sin datos de prueba hardcodeados.
+        - Colores, logo y nombre de la barbería deben venir del backend, nunca fijos.
+chat:
+  auto_reply: true
