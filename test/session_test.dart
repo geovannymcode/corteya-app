@@ -43,7 +43,37 @@ ResponseBody jsonBody(String data, int status) => ResponseBody.fromString(
     Headers.contentTypeHeader: [Headers.jsonContentType],
   },
 );
+
+class FlakyTokenStore extends MemoryStore {
+  int reads = 0;
+  @override
+  Future<Tokens?> read() async {
+    reads++;
+    if (reads == 1) throw StateError('Keychain temporalmente bloqueado');
+    return super.read();
+  }
+}
+
 void main() {
+  test(
+    'Una lectura fallida de Keychain puede reintentarse sin reiniciar',
+    () async {
+      final store = FlakyTokenStore();
+      final dio = Dio();
+      final refresh = Dio();
+      final session = SessionInterceptor(
+        dio: dio,
+        refreshDio: refresh,
+        store: store,
+        onExpired: () {},
+      );
+      await expectLater(session.credentials(), throwsStateError);
+      expect((await session.credentials())!.accessToken, 'old-access');
+      expect(store.reads, 2);
+      dio.close();
+      refresh.close();
+    },
+  );
   test('El logger nunca incluye tokens, teléfonos, OTP ni URLs', () async {
     final output = <String>[];
     final dio = Dio(BaseOptions(baseUrl: 'https://example.test'));

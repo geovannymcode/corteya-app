@@ -29,7 +29,12 @@ class SessionInterceptor extends Interceptor {
 
   Future<Tokens?> credentials() async {
     if (_loaded) return _tokens;
-    return _loading ??= _load();
+    final pending = _loading ??= _load();
+    try {
+      return await pending;
+    } finally {
+      if (identical(_loading, pending)) _loading = null;
+    }
   }
 
   Future<Tokens?> _load() async {

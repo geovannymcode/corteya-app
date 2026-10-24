@@ -24,7 +24,7 @@ class Barbershop {
     statusMessage: j['statusMessage'] as String,
     nextChangeAt: j['nextChangeAt'] == null
         ? null
-        : DateTime.parse(j['nextChangeAt'] as String),
+        : DateTime.tryParse(j['nextChangeAt'] as String),
     bookingEnabled: j['bookingEnabled'] as bool,
   );
 }

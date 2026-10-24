@@ -3,11 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:corteya/core/formats.dart';
+import 'package:corteya/barbershop/models.dart';
 import 'package:corteya/core/errors.dart';
 import 'package:corteya/app/theme.dart';
 import 'package:corteya/barbershop/links.dart';
 
 void main() {
+  test('nextChangeAt inválido no impide abrir la barbería', () {
+    final shop = Barbershop.fromJson({
+      'slug': 'demo',
+      'name': 'Demo',
+      'open': false,
+      'statusMessage': 'Cerrado',
+      'bookingEnabled': true,
+      'nextChangeAt': 'fecha incorrecta',
+    });
+    expect(shop.nextChangeAt, isNull);
+    expect(shop.statusMessage, 'Cerrado');
+  });
   setUpAll(tz.initializeTimeZones);
   test('Celular colombiano exacto', () {
     expect(validPhone('3123456789'), isTrue);
