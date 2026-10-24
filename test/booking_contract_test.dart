@@ -118,4 +118,53 @@ void main() {
     expect(mineCalls, 1);
     dio.close();
   });
+  for (final enrichment in ['error', 'absent', 'malformed']) {
+    test(
+      'Detalle permanece y enriquecimiento $enrichment se intenta una sola vez',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'https://example.test'));
+        final api = BookingApi(dio);
+        final detail = appointmentFixture(status: 'CONFIRMED');
+        var auxiliaryCalls = 0;
+        dio.httpClientAdapter = Adapter((request) async {
+          if (request.path == '/api/v1/me/appointments') {
+            auxiliaryCalls++;
+            return switch (enrichment) {
+              'error' => jsonBody('{}', 503),
+              'malformed' => jsonBody('{"upcoming":"invalid","past":[]}', 200),
+              _ => jsonBody('{"upcoming":[],"past":[]}', 200),
+            };
+          }
+          return jsonBody(jsonEncode(detail.json), 200);
+        });
+        for (var i = 0; i < 3; i++) {
+          final result = await api.appointment(detail.token);
+          expect(result.json, detail.json);
+          expect(result.status, 'CONFIRMED');
+        }
+        expect(auxiliaryCalls, 1);
+        dio.close();
+      },
+    );
+  }
+  test('CancelToken se propaga aunque el detalle ya se obtuvo', () async {
+    final dio = Dio(BaseOptions(baseUrl: 'https://example.test'));
+    final api = BookingApi(dio);
+    final detail = appointmentFixture(status: 'CONFIRMED');
+    final cancel = CancelToken();
+    dio.httpClientAdapter = Adapter((request) async {
+      if (request.path == '/api/v1/me/appointments') {
+        cancel.cancel('La pantalla salió');
+        return jsonBody('{"upcoming":[],"past":[]}', 200);
+      }
+      return jsonBody(jsonEncode(detail.json), 200);
+    });
+    await expectLater(
+      api.appointment(detail.token, cancelToken: cancel),
+      throwsA(
+        isA<DioException>().having(CancelToken.isCancel, 'cancelación', isTrue),
+      ),
+    );
+    dio.close();
+  });
 }

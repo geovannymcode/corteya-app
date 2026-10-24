@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +15,7 @@ import 'package:corteya/booking/payment.dart';
 import 'package:corteya/booking/appointments.dart';
 
 import 'fixtures/booking_backend.dart';
+import 'session_test.dart' show Adapter, jsonBody;
 
 Widget harness(Widget child, FixtureApi api, {DateTime Function()? now}) =>
     ProviderScope(
@@ -224,4 +228,53 @@ void main() {
       expect(api.reads, calls);
     });
   }
+  testWidgets(
+    'Espera muestra ticket sin backoff si CONFIRMED y falla la lista auxiliar',
+    (tester) async {
+      final dio = Dio(BaseOptions(baseUrl: 'https://example.test'));
+      final api = BookingApi(dio);
+      final detail = appointmentFixture(status: 'CONFIRMED');
+      var auxiliaryCalls = 0;
+      var detailCalls = 0;
+      dio.httpClientAdapter = Adapter((request) async {
+        if (request.path == '/api/v1/me/appointments') {
+          auxiliaryCalls++;
+          return jsonBody('{}', 503);
+        }
+        detailCalls++;
+        return jsonBody(jsonEncode(detail.json), 200);
+      });
+      final confirmed = ValueNotifier<bool>(false);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bookingApiProvider.overrideWithValue(api),
+            clockProvider.overrideWithValue(() => fixedNow),
+          ],
+          child: MaterialApp(
+            home: ValueListenableBuilder<bool>(
+              valueListenable: confirmed,
+              builder: (context, done, child) => done
+                  ? AppointmentScreen(token: detail.token)
+                  : WaitingScreen(
+                      token: detail.token,
+                      onConfirmed: (_) => confirmed.value = true,
+                    ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Tu cita está confirmada'), findsOneWidget);
+      expect(find.text('Reintentar consulta'), findsNothing);
+      expect(auxiliaryCalls, 1);
+      expect(detailCalls, 2);
+      await tester.pump(const Duration(seconds: 40));
+      expect(detailCalls, 2);
+      expect(auxiliaryCalls, 1);
+      await tester.pumpWidget(const SizedBox());
+      confirmed.dispose();
+      dio.close();
+    },
+  );
 }

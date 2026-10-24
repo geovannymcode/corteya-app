@@ -18,6 +18,7 @@ class BookingApi {
   BookingApi(this.dio);
   final Dio dio;
   final _details = <String, Map<String, dynamic>>{};
+  final _enrichmentAttempted = <String>{};
   Future<List<Barber>> barbers(String slug, String serviceId) async {
     final result = await dio.get<List<dynamic>>(
       '/api/v1/barbershops/${Uri.encodeComponent(slug)}/barbers',
@@ -124,17 +125,27 @@ class BookingApi {
       '/api/v1/appointments/${Uri.encodeComponent(token)}',
       cancelToken: cancelToken,
     );
-    if (_details[token]?.containsKey('cancellable') != true) {
-      final rows = await dio.get<Map<String, dynamic>>(
-        '/api/v1/me/appointments',
-        cancelToken: cancelToken,
-      );
-      for (final key in ['upcoming', 'past']) {
-        for (final row in rows.data![key] as List) {
-          final json = objectMap(row);
-          final key = json['publicToken'] as String;
-          _details[key] = {...?_details[key], ...json};
+    if (_details[token]?.containsKey('cancellable') != true &&
+        _enrichmentAttempted.add(token)) {
+      // Optional enrichment: remember the attempt even when the list fails or
+      // omits this token, so polling never depends on this auxiliary endpoint.
+      try {
+        final rows = await dio.get<Map<String, dynamic>>(
+          '/api/v1/me/appointments',
+          cancelToken: cancelToken,
+        );
+        for (final section in ['upcoming', 'past']) {
+          for (final row in rows.data![section] as List) {
+            final json = objectMap(row);
+            final rowToken = json['publicToken'] as String;
+            _details[rowToken] = {...?_details[rowToken], ...json};
+          }
         }
+      } catch (error) {
+        if (error is DioException && CancelToken.isCancel(error)) rethrow;
+        final cancellation = cancelToken?.cancelError;
+        if (cancellation != null) throw cancellation;
+        // Keep the authoritative detail, including when enrichment is malformed.
       }
     }
     return Appointment.fromJson({...?_details[token], ...response.data!});
