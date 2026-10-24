@@ -363,7 +363,7 @@ class _LinkEntryState extends ConsumerState<LinkEntry> {
       }
     } catch (e) {
       if (mounted && widget.slug == slug) {
-        setState(() => error = userMessage(e));
+        setState(() => error = userMessage(e, barbershopLookup: true));
       }
     }
   }

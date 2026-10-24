@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-String userMessage(Object error) {
+String userMessage(Object error, {bool barbershopLookup = false}) {
   if (error is DioException) {
     if ([
       DioExceptionType.connectionError,
@@ -25,7 +25,9 @@ String userMessage(Object error) {
       }
     }
     if (error.response?.statusCode == 404) {
-      return 'No encontramos esa barbería. Revisa el código e intenta de nuevo.';
+      return barbershopLookup
+          ? 'No encontramos esa barbería. Revisa el código e intenta de nuevo.'
+          : 'No encontramos lo que buscabas';
     }
     if (error.response?.statusCode == 401) {
       return 'Tu sesión terminó. Ingresa de nuevo para continuar.';

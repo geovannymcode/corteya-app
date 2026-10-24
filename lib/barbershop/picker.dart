@@ -41,7 +41,9 @@ class _ShopPickerState extends ConsumerState<ShopPicker> {
     try {
       await ref.read(appProvider.notifier).selectShop(slug);
     } catch (e) {
-      if (mounted) setState(() => error = userMessage(e));
+      if (mounted) {
+        setState(() => error = userMessage(e, barbershopLookup: true));
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
