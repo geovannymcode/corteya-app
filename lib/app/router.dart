@@ -86,18 +86,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 state.profile?.staffOf(state.content?.shop.slug) != true
           ? '/booking${pendingServiceId == null ? '' : '?service=${Uri.encodeComponent(pendingServiceId!)}'}'
           : landing(state);
-      if (state.message != null &&
-          state.profile == null &&
-          path != '/login' &&
-          path != '/otp') {
-        return path == '/pago'
-            ? '/login?next=pago'
-            : path.startsWith('/appointments')
-            ? '/login?next=appointments'
-            : path == '/booking'
-            ? '/login?next=booking'
-            : '/login';
-      }
       if (state.profile != null && (state.profile!.name ?? '').trim().isEmpty) {
         if (path == '/name') return null;
         return paymentReturnRequested
