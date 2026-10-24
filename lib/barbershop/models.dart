@@ -3,6 +3,9 @@ class Barbershop {
     required this.slug,
     required this.name,
     this.logoUrl,
+    this.bookingWindowDays,
+    this.address,
+    this.city,
     this.primaryColor,
     this.secondaryColor,
     required this.open,
@@ -11,13 +14,17 @@ class Barbershop {
     required this.bookingEnabled,
   });
   final String slug, name, statusMessage;
-  final String? logoUrl, primaryColor, secondaryColor;
+  final String? logoUrl, primaryColor, secondaryColor, address, city;
+  final int? bookingWindowDays;
   final bool open, bookingEnabled;
   final DateTime? nextChangeAt;
   factory Barbershop.fromJson(Map<String, dynamic> j) => Barbershop(
     slug: j['slug'] as String,
     name: j['name'] as String,
     logoUrl: j['logoUrl'] as String?,
+    bookingWindowDays: j['bookingWindowDays'] as int?,
+    address: j['address'] as String?,
+    city: j['city'] as String?,
     primaryColor: j['primaryColor'] as String?,
     secondaryColor: j['secondaryColor'] as String?,
     open: j['open'] as bool,
@@ -42,11 +49,16 @@ class ShopService {
 }
 
 class Barber {
-  const Barber(this.id, this.name, this.photoUrl);
+  const Barber(this.id, this.name, this.photoUrl, [this.nextAvailableAt]);
   final String id, name;
   final String? photoUrl;
-  factory Barber.fromJson(Map<String, dynamic> j) =>
-      Barber(j['id'] as String, j['name'] as String, j['photoUrl'] as String?);
+  final DateTime? nextAvailableAt;
+  factory Barber.fromJson(Map<String, dynamic> j) => Barber(
+    j['id'] as String,
+    j['name'] as String,
+    j['photoUrl'] as String?,
+    DateTime.tryParse(j['nextAvailableAt'] as String? ?? ''),
+  );
 }
 
 class ShopContent {
