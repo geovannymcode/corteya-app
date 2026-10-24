@@ -1,8 +1,9 @@
-# CorteYa — fase 7
+# CorteYa — fases 7 y 8
 
 Una app Android/iOS con marca CorteYa y apariencia de la barbería elegida por QR,
 link o código. Estructura por feature: `app`, `core`, `barbershop`, `auth`, `account`.
-No incluye todavía reservas/pagos ni operación del barbero.
+Incluye reserva, señal y Mis citas contra el contrato acordado de backend 8B.
+El modo barbero sigue siendo un placeholder para fase 9.
 
 ## Ejecutar
 
@@ -38,7 +39,7 @@ operativos**. TODO despliegue: reemplazar URLs y `APP_LINK_HOST`.
    inexistente y “Cambiar de barbería”.
 3. Toca “Reservar cita”: valida el celular, solicita un OTP real del backend,
    introduce sus seis dígitos y completa el nombre si hace falta. El destino
-   final es un placeholder. Reenvío se habilita a los 60 segundos.
+   final es el flujo de reserva. Reenvío se habilita a los 60 segundos.
 4. Con sesión de OWNER/BARBER de la barbería actual, comprueba “Modo barbero”.
    Una membresía de otra barbería debe mostrar el home del cliente.
 5. En “Mi cuenta”, prueba cancelar las confirmaciones, cerrar sesión y borrar
@@ -95,7 +96,7 @@ vertical, bundle ID `com.geovannycode.corteya` y nombre CorteYa están configura
 
 ## TODO de fases posteriores
 
-- Fase 8: reserva real y pagos.
+- Integrar backend 8B y cancelación del PR #6 para probar reserva y pago reales.
 - Fase 9: modo barbero.
 - Push/Firebase cuando corresponda en el backend.
 - Despliegue: URLs reales, Universal Links/App Links, Associated Domains,
@@ -103,3 +104,47 @@ vertical, bundle ID `com.geovannycode.corteya` y nombre CorteYa están configura
   Los QR HTTPS del host configurado ya se interpretan dentro del lector, pero el
   sistema operativo aún no abre enlaces HTTPS en la app.
 - Confirmar incorporación del PR de memberships del backend en `develop`.
+
+# Fase 8 — reserva, señal y Mis citas
+
+La rama de esta fase incorpora los tres commits de fase 7 con autorización del
+usuario; el PR #2 sigue siendo una revisión separada y no se hizo merge por él.
+Se reemplaza el placeholder de reserva por servicio → barbero → horario →
+cotización → confirmación. Incluye pagos Bre-B/Wompi, espera, ticket, calendario,
+Mis citas y cancelación con confirmación.
+
+**Bloqueo de integración real:** requiere el contrato de corteya-api fase 8B y la
+cancelación del PR #6 en develop. La app no modifica ese repositorio ni inventa
+montos o políticas cuando faltan. Ver [contrato acordado](docs/backend-fase-8B.md).
+Mientras llega el backend, las pruebas usan mocks; los endpoints reales antiguos
+pueden mostrar estados de error o datos incompletos y no permiten completar el flujo.
+
+Paquetes nuevos verificados en pub.dev: `url_launcher 6.3.3` y
+`add_2_calendar 3.1.1`. No se añadieron otros paquetes externos. Wompi sigue la
+[documentación oficial de Web Checkout](https://docs.wompi.co/docs/colombia/widget-checkout-web/).
+
+## Probar fase 8
+
+```sh
+flutter analyze
+flutter test
+flutter run --dart-define-from-file=env/dev.json
+```
+
+Con backend 8B, tocar Reservar cita o un servicio; elegir barbero, día y hora;
+revisar la cotización y confirmar. Probar NONE, Bre-B y Wompi sandbox configurados
+por el backend. En Bre-B, copiar llave/referencia, esperar confirmación del staff y
+comprobar vencimiento. En Wompi, completar el checkout y volver mediante
+`corteya://pago`; un parámetro `status=CONFIRMED` en el enlace no confirma nada.
+Retomar desde Mis citas después de cerrar la app, probar reintentos de pago,
+cancelación a tiempo/tarde y añadir una cita confirmada al calendario del teléfono.
+
+Las pruebas de widget e integración con mocks cubren los pasos, servicio
+preseleccionado, cotización autoritativa, ambos 409, Bre-B, estados de espera,
+confirmación de cancelación, polling y regresiones de sesión/horarios de fase 7.
+Quedan para dispositivo físico la experiencia del banco/Wompi, permisos y guardado
+del calendario; no se realizaron pagos reales ni cancelaciones de datos reales.
+
+TODO: modo barbero (fase 9), push/Firebase, acción propia de reprogramación,
+dominio/Universal Links y publicación. La reprogramación sigue siendo cancelar y
+reservar de nuevo.
