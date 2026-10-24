@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/state.dart';
@@ -65,6 +66,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 24),
+        OutlinedButton(
+          onPressed: () => context.push('/appointments'),
+          child: const Text('Mis citas'),
+        ),
         OutlinedButton(
           onPressed: busy ? null : () => confirm(delete: false),
           child: const Text('Cerrar sesión'),

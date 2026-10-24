@@ -131,10 +131,7 @@ void main() {
       if (!staff) {
         await tester.tap(find.text('Reservar cita'));
         await tester.pumpAndSettle();
-        expect(
-          find.text('Pronto podrás elegir servicio, barbero y horario.'),
-          findsOneWidget,
-        );
+        expect(find.text('¿Qué te hacemos?'), findsOneWidget);
       }
       await tester.pumpWidget(const SizedBox());
       container.dispose();
@@ -277,10 +274,7 @@ void main() {
           .toString(),
       '/booking',
     );
-    expect(
-      find.text('Pronto podrás elegir servicio, barbero y horario.'),
-      findsOneWidget,
-    );
+    expect(find.text('¿Qué te hacemos?'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     container.dispose();
   });

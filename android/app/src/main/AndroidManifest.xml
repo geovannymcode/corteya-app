@@ -26,6 +26,12 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="corteya" android:host="pago"/>
+            </intent-filter>
             <!-- TODO despliegue: App Links HTTPS con APP_LINK_HOST y assetlinks.json. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -50,6 +56,8 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <intent><action android:name="android.intent.action.INSERT"/><data android:mimeType="vnd.android.cursor.item/event"/></intent>
+        <intent><action android:name="android.support.customtabs.action.CustomTabsService"/></intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

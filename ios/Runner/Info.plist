@@ -81,5 +81,15 @@
 	</dict>
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Puedes añadir tu cita al calendario para recordar la fecha y hora.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>CorteYa puede guardar en tu calendario la cita que tú elijas.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>El editor de calendario de iOS puede usar contactos para sugerir ubicaciones al guardar tu cita.</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+	</array>
 </dict>
 </plist>

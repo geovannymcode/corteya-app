@@ -10,9 +10,13 @@ class ShopHome extends StatelessWidget {
     required this.onBook,
     required this.onChange,
     required this.onAccount,
+    this.onService,
+    this.onAppointments,
   });
   final ShopContent content;
   final VoidCallback onBook, onChange, onAccount;
+  final VoidCallback? onAppointments;
+  final void Function(ShopService)? onService;
   @override
   Widget build(BuildContext context) {
     final shop = content.shop;
@@ -20,6 +24,12 @@ class ShopHome extends StatelessWidget {
       appBar: AppBar(
         title: const Text('CorteYa'),
         actions: [
+          if (onAppointments != null)
+            IconButton(
+              onPressed: onAppointments,
+              icon: const Icon(Icons.receipt_long),
+              tooltip: 'Mis citas',
+            ),
           IconButton(
             onPressed: onAccount,
             icon: const Icon(Icons.person_outline),
@@ -74,6 +84,9 @@ class ShopHome extends StatelessWidget {
             for (final service in content.services)
               Card(
                 child: ListTile(
+                  onTap: shop.bookingEnabled && onService != null
+                      ? () => onService!(service)
+                      : null,
                   title: Text(service.name),
                   subtitle: Text('${service.durationMinutes} min'),
                   trailing: Text(formatCop(service.priceCop)),

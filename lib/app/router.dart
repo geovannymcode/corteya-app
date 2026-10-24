@@ -8,6 +8,10 @@ import '../barbershop/home.dart';
 import '../barbershop/links.dart';
 import '../barbershop/picker.dart';
 import '../core/errors.dart';
+import '../booking/flow.dart';
+import '../booking/payment.dart';
+import '../booking/appointments.dart';
+import '../booking/models.dart';
 import 'state.dart';
 
 class RouterRefresh extends ChangeNotifier {
@@ -22,12 +26,20 @@ String landing(AppState state) => state.content == null
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = RouterRefresh();
   var bookingRequested = false;
+  var appointmentsRequested = false;
+  var paymentReturnRequested = false;
+  String? pendingServiceId;
   ref.listen(appProvider, (_, next) => refresh.refresh());
   final router = GoRouter(
     refreshListenable: refresh,
+    observers: [paymentRouteObserver],
     redirect: (context, route) {
       final state = ref.read(appProvider);
       final path = route.uri.path;
+      if (route.uri.scheme == 'corteya' && route.uri.host == 'pago') {
+        paymentReturnRequested = true;
+        return '/pago';
+      }
       if (route.uri.hasScheme) {
         final slug = shopSlug(
           route.uri.toString(),
@@ -48,6 +60,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             : shopSlug(from, appLinkHost: ref.read(configProvider).appLinkHost);
         if (slug != null) return '/b/$slug';
         final incoming = from == null ? null : Uri.tryParse(from);
+        if (incoming?.path == '/pago') {
+          paymentReturnRequested = true;
+          return '/pago';
+        }
         if (incoming != null && incoming.path.startsWith('/b/')) {
           return incoming.path;
         }
@@ -60,28 +76,64 @@ final routerProvider = Provider<GoRouter>((ref) {
       final wantsBooking =
           bookingRequested || route.uri.queryParameters['next'] == 'booking';
       final destination =
-          wantsBooking &&
-              state.content?.shop.bookingEnabled == true &&
-              state.profile?.staffOf(state.content?.shop.slug) != true
-          ? '/booking'
+          paymentReturnRequested || route.uri.queryParameters['next'] == 'pago'
+          ? '/pago'
+          : appointmentsRequested ||
+                route.uri.queryParameters['next'] == 'appointments'
+          ? '/appointments'
+          : wantsBooking &&
+                state.content?.shop.bookingEnabled == true &&
+                state.profile?.staffOf(state.content?.shop.slug) != true
+          ? '/booking${pendingServiceId == null ? '' : '?service=${Uri.encodeComponent(pendingServiceId!)}'}'
           : landing(state);
       if (state.message != null &&
           state.profile == null &&
           path != '/login' &&
           path != '/otp') {
-        return path == '/booking' ? '/login?next=booking' : '/login';
+        return path == '/pago'
+            ? '/login?next=pago'
+            : path.startsWith('/appointments')
+            ? '/login?next=appointments'
+            : path == '/booking'
+            ? '/login?next=booking'
+            : '/login';
       }
       if (state.profile != null && (state.profile!.name ?? '').trim().isEmpty) {
         if (path == '/name') return null;
-        return wantsBooking ? '/name?next=booking' : '/name';
+        return paymentReturnRequested
+            ? '/name?next=pago'
+            : appointmentsRequested
+            ? '/name?next=appointments'
+            : wantsBooking
+            ? '/name?next=booking'
+            : '/name';
       }
-      if (state.profile != null && bookingRequested) {
+      if (state.profile != null &&
+          (bookingRequested ||
+              appointmentsRequested ||
+              paymentReturnRequested)) {
         bookingRequested = false;
+        appointmentsRequested = false;
+        paymentReturnRequested = false;
+        pendingServiceId = null;
         return path == destination ? null : destination;
       }
       if (state.profile == null &&
-          ['/account', '/name', '/booking', '/staff'].contains(path)) {
-        return path == '/booking' ? '/login?next=booking' : '/login';
+          ([
+                '/account',
+                '/name',
+                '/booking',
+                '/staff',
+                '/pago',
+              ].contains(path) ||
+              path.startsWith('/appointments'))) {
+        return path == '/pago'
+            ? '/login?next=pago'
+            : path.startsWith('/appointments')
+            ? '/login?next=appointments'
+            : path == '/booking'
+            ? '/login?next=booking'
+            : '/login';
       }
       if (state.profile != null && ['/login', '/otp', '/name'].contains(path)) {
         return destination;
@@ -123,9 +175,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ShopHome(
             content: state.content!,
             onBook: () {
+              pendingServiceId = null;
               bookingRequested = state.profile == null;
               context.push(
                 state.profile == null ? '/login?next=booking' : '/booking',
+              );
+            },
+            onService: (service) {
+              pendingServiceId = service.id;
+              bookingRequested = state.profile == null;
+              context.push(
+                state.profile == null
+                    ? '/login?next=booking'
+                    : '/booking?service=${Uri.encodeComponent(service.id)}',
+              );
+            },
+            onAppointments: () {
+              appointmentsRequested = state.profile == null;
+              bookingRequested = false;
+              context.push(
+                state.profile == null
+                    ? '/login?next=appointments'
+                    : '/appointments',
               );
             },
             onChange: () {
@@ -145,9 +216,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           message: ref.read(appProvider).message,
           request: ref.read(appProvider.notifier).requestOtp,
           onSent: (phone) => context.push(
-            route.uri.queryParameters['next'] == 'booking'
-                ? '/otp?next=booking'
-                : '/otp',
+            route.uri.queryParameters['next'] == null
+                ? '/otp'
+                : '/otp?next=${route.uri.queryParameters['next']}',
             extra: phone,
           ),
         ),
@@ -175,10 +246,40 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/account', builder: (_, route) => const AccountScreen()),
       GoRoute(
         path: '/booking',
-        builder: (_, route) => const PlaceholderScreen(
-          title: 'Reservar cita',
-          message: 'Pronto podrás elegir servicio, barbero y horario.',
+        builder: (_, route) =>
+            BookingFlow(serviceId: route.uri.queryParameters['service']),
+      ),
+      GoRoute(
+        path: '/appointments',
+        builder: (_, route) => const MyAppointmentsScreen(),
+      ),
+      GoRoute(
+        path: '/appointments/:token/payment',
+        builder: (_, route) => PaymentScreen(
+          token: route.pathParameters['token']!,
+          initial: route.extra is Appointment
+              ? route.extra! as Appointment
+              : null,
+          overrideInstructions: route.extra is PaymentInstructions
+              ? route.extra! as PaymentInstructions
+              : null,
         ),
+      ),
+      GoRoute(
+        path: '/appointments/:token/wait',
+        builder: (context, route) => WaitingScreen(
+          token: route.pathParameters['token']!,
+          onConfirmed: (a) => context.go('/appointments/${a.token}'),
+        ),
+      ),
+      GoRoute(
+        path: '/appointments/:token',
+        builder: (_, route) =>
+            AppointmentScreen(token: route.pathParameters['token']!),
+      ),
+      GoRoute(
+        path: '/pago',
+        builder: (_, route) => const PaymentReturnScreen(),
       ),
       GoRoute(
         path: '/staff',

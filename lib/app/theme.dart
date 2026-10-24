@@ -48,7 +48,10 @@ ThemeData shopTheme(Barbershop? shop) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(0, 52),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontFamily: 'BricolageGrotesque',
+        ),
       ),
     ),
   );
