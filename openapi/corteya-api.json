@@ -113,12 +113,235 @@
         }
       }
     },
+    "/api/v1/barbershops/{slug}/staff/time-off": {
+      "get": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "summary": "Consultar bloqueos que se cruzan con [from,to), con offset obligatorio",
+        "operationId": "blocks",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeOffResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "summary": "Bloquear horas propias o de cualquier barbero si eres OWNER; conflictos devuelven 409 y conflicts",
+        "operationId": "block",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeOffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeOffResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/appointments": {
+      "post": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "summary": "Crear cita manual confirmada, sin señal; fuera de grilla pero sin cruces de citas ni bloqueos",
+        "operationId": "manual",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffAppointmentResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/appointments/{id}/no-show": {
+      "post": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "operationId": "noShow",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/barbershops/{slug}/staff/appointments/{id}/deposit/reject": {
       "post": {
         "tags": [
           "payments-controller"
         ],
         "operationId": "reject",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/appointments/{id}/deposit/refunded": {
+      "post": {
+        "tags": [
+          "cancellation-controller"
+        ],
+        "summary": "Registrar que el barbero ya devolvió la señal",
+        "description": "OWNER o BARBER asignado; no ejecuta transferencias ni reembolsos automáticos",
+        "operationId": "refunded",
         "parameters": [
           {
             "name": "slug",
@@ -178,6 +401,90 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/appointments/{id}/complete": {
+      "post": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "operationId": "complete",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/appointments/{id}/cancel": {
+      "post": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffCancelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
           }
         },
         "security": [
@@ -415,12 +722,50 @@
         ]
       }
     },
+    "/api/v1/appointments/{publicToken}/cancel": {
+      "post": {
+        "tags": [
+          "cancellation-controller"
+        ],
+        "summary": "Cancelar una cita propia antes de su inicio",
+        "description": "Devuelve si hay devolución pendiente o si la señal no es reembolsable",
+        "operationId": "cancel_1",
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancellationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/me": {
       "get": {
         "tags": [
           "account-controller"
         ],
         "summary": "Perfil y membresías actuales del usuario autenticado",
+        "description": "Cada membresía incluye slug y nombre actuales de la barbería, también si está inactiva",
         "operationId": "me",
         "responses": {
           "200": {
@@ -548,8 +893,76 @@
                 }
               }
             }
+          },
+          "200": {
+            "description": "Identidad pública y reglas de reserva sin UUID de barbería",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarbershopResponse"
+                }
+              }
+            }
           }
         }
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/summary": {
+      "get": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "summary": "Resumen en Bogotá: citas por inicio, cobros por confirmación, devoluciones por DONE y deuda pendiente actual",
+        "operationId": "summary",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DAY",
+                "WEEK",
+                "MONTH"
+              ]
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffSummaryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/barbershops/{slug}/staff/deposits": {
@@ -665,6 +1078,42 @@
         ]
       }
     },
+    "/api/v1/barbershops/{slug}/staff/action-items": {
+      "get": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "summary": "Señales Bre-B vigentes por confirmar, pagos tardíos y devoluciones pendientes",
+        "operationId": "actions",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionItemsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/barbershops/{slug}/services": {
       "get": {
         "tags": [
@@ -704,6 +1153,89 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/barbershops/{slug}/booking-quote": {
+      "get": {
+        "tags": [
+          "public-booking-controller"
+        ],
+        "summary": "Cotizar un hueco sin reservarlo; la creación vuelve a validar disponibilidad",
+        "operationId": "quote",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "barberId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "startsAt",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no disponible en esta barbería",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Horario no disponible o reservas no habilitadas",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingQuoteResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/barbershops/{slug}/barbers": {
@@ -861,6 +1393,53 @@
                 }
               }
             }
+          },
+          "200": {
+            "description": "Cita y señal sin secretos de pago",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/barbershops/{slug}/staff/time-off/{id}": {
+      "delete": {
+        "tags": [
+          "staff-booking-controller"
+        ],
+        "operationId": "deleteBlock",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
           }
         },
         "security": [
@@ -1052,6 +1631,142 @@
           }
         }
       },
+      "TimeOffRequest": {
+        "type": "object",
+        "properties": {
+          "barberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "TimeOffResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "barberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ManualAppointmentRequest": {
+        "type": "object",
+        "properties": {
+          "barberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customerName": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 0
+          },
+          "customerPhone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 16,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "customerName"
+        ]
+      },
+      "StaffAppointmentResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_PAYMENT",
+              "CONFIRMED",
+              "COMPLETED",
+              "NO_SHOW",
+              "CANCELLED",
+              "EXPIRED"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "APP",
+              "MANUAL"
+            ]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "StaffCancelRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
       "CreateAppointmentRequest": {
         "type": "object",
         "properties": {
@@ -1138,6 +1853,13 @@
                 "type": "null"
               }
             ]
+          },
+          "cancellableWithRefundUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelPolicyText": {
+            "type": "string"
           }
         }
       },
@@ -1282,6 +2004,41 @@
           }
         }
       },
+      "CancellationResponse": {
+        "type": "object",
+        "properties": {
+          "publicToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_PAYMENT",
+              "CONFIRMED",
+              "COMPLETED",
+              "NO_SHOW",
+              "CANCELLED",
+              "EXPIRED"
+            ]
+          },
+          "refundStatus": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "DONE",
+              "FORFEITED"
+            ]
+          },
+          "refundAmountCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
       "RenameBody": {
         "type": "object",
         "properties": {
@@ -1356,11 +2113,45 @@
           }
         }
       },
-      "AppointmentStatusResponse": {
+      "MyAppointmentResponse": {
         "type": "object",
         "properties": {
           "publicToken": {
             "type": "string"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "barberName": {
+            "type": "string"
+          },
+          "barbershopName": {
+            "type": "string"
+          },
+          "barbershopSlug": {
+            "type": "string"
+          },
+          "barbershopLogoUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priceCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "depositCop": {
+            "type": "integer",
+            "format": "int64"
           },
           "status": {
             "type": "string",
@@ -1373,17 +2164,36 @@
               "EXPIRED"
             ]
           },
-          "startsAt": {
+          "depositStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED",
+              "VOIDED",
+              "ERROR",
+              "EXPIRED",
+              "LATE_PAYMENT"
+            ]
+          },
+          "refundStatus": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "DONE",
+              "FORFEITED"
+            ]
+          },
+          "cancellable": {
+            "type": "boolean"
+          },
+          "cancellableWithRefundUntil": {
             "type": "string",
             "format": "date-time"
-          },
-          "endsAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "depositCop": {
-            "type": "integer",
-            "format": "int64"
           },
           "paymentReference": {
             "type": "string"
@@ -1394,6 +2204,9 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "cancelPolicyText": {
+            "type": "string"
           }
         }
       },
@@ -1403,13 +2216,157 @@
           "upcoming": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AppointmentStatusResponse"
+              "$ref": "#/components/schemas/MyAppointmentResponse"
             }
           },
           "past": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AppointmentStatusResponse"
+              "$ref": "#/components/schemas/MyAppointmentResponse"
+            }
+          }
+        }
+      },
+      "BarbershopResponse": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "primaryColor": {
+            "type": "string"
+          },
+          "secondaryColor": {
+            "type": "string"
+          },
+          "open": {
+            "type": "boolean"
+          },
+          "statusMessage": {
+            "type": "string"
+          },
+          "nextChangeAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "bookingEnabled": {
+            "type": "boolean"
+          },
+          "bookingWindowDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "BarberSummary": {
+        "type": "object",
+        "properties": {
+          "barberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "barberName": {
+            "type": "string"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/StaffMetrics"
+          }
+        }
+      },
+      "StaffMetrics": {
+        "type": "object",
+        "properties": {
+          "totalAppointments": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "noShows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "noShowRate": {
+            "type": "number"
+          },
+          "depositsReceivedCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "estimatedRevenueCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pendingRefunds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pendingRefundsCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completedRefunds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completedRefundsCop": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "StaffSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": [
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/StaffMetrics"
+          },
+          "barbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BarberSummary"
             }
           }
         }
@@ -1458,6 +2415,15 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "refundStatus": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "DONE",
+              "FORFEITED"
+            ]
           }
         }
       },
@@ -1474,6 +2440,401 @@
           },
           "appointment": {
             "$ref": "#/components/schemas/AppointmentStatusResponse"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "barberName": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_PAYMENT",
+              "CONFIRMED",
+              "COMPLETED",
+              "NO_SHOW",
+              "CANCELLED",
+              "EXPIRED"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "APP",
+              "MANUAL"
+            ]
+          },
+          "depositStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED",
+              "VOIDED",
+              "ERROR",
+              "EXPIRED",
+              "LATE_PAYMENT"
+            ]
+          },
+          "refundStatus": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "DONE",
+              "FORFEITED"
+            ]
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AppointmentStatusResponse": {
+        "type": "object",
+        "properties": {
+          "publicToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_PAYMENT",
+              "CONFIRMED",
+              "COMPLETED",
+              "NO_SHOW",
+              "CANCELLED",
+              "EXPIRED"
+            ]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "depositCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "paymentReference": {
+            "type": "string"
+          },
+          "holdExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "cancellableWithRefundUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelPolicyText": {
+            "type": "string"
+          }
+        }
+      },
+      "ActionItem": {
+        "type": "object",
+        "properties": {
+          "depositId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appointmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicToken": {
+            "type": "string"
+          },
+          "barberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "amountCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED",
+              "VOIDED",
+              "ERROR",
+              "EXPIRED",
+              "LATE_PAYMENT"
+            ]
+          },
+          "refundStatus": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "DONE",
+              "FORFEITED"
+            ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "BREB_MANUAL",
+              "WOMPI"
+            ]
+          },
+          "providerTransactionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confirmedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "barberName": {
+            "type": "string"
+          },
+          "serviceName": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ActionItemsResponse": {
+        "type": "object",
+        "properties": {
+          "pendingBreB": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionItem"
+            }
+          },
+          "latePayments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionItem"
+            }
+          },
+          "pendingRefunds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionItem"
+            }
+          }
+        }
+      },
+      "BookingQuoteResponse": {
+        "type": "object",
+        "properties": {
+          "priceCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "depositMode": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "BREB_MANUAL",
+              "WOMPI"
+            ]
+          },
+          "depositCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "payAtShopCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "holdMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cancellableWithRefundUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelPolicyText": {
+            "type": "string"
+          }
+        }
+      },
+      "AppointmentDepositResponse": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "BREB_MANUAL",
+              "WOMPI"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED",
+              "VOIDED",
+              "ERROR",
+              "EXPIRED",
+              "LATE_PAYMENT"
+            ]
+          },
+          "amountCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "latestAttemptStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DECLINED",
+              "VOIDED",
+              "ERROR",
+              "EXPIRED",
+              "LATE_PAYMENT"
+            ]
+          },
+          "canRetry": {
+            "type": "boolean"
+          },
+          "holdExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "refundStatus": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "DONE",
+              "FORFEITED"
+            ]
+          },
+          "paymentInstructions": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PaymentInstructions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "AppointmentDetailResponse": {
+        "type": "object",
+        "properties": {
+          "publicToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_PAYMENT",
+              "CONFIRMED",
+              "COMPLETED",
+              "NO_SHOW",
+              "CANCELLED",
+              "EXPIRED"
+            ]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "depositCop": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "paymentReference": {
+            "type": "string"
+          },
+          "holdExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "cancellableWithRefundUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelPolicyText": {
+            "type": "string"
+          },
+          "deposit": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AppointmentDepositResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       }

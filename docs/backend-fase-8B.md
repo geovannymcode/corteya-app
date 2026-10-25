@@ -1,10 +1,10 @@
-# Contrato pendiente de corteya-api — fase 8B
+# Contrato de corteya-api — fase 8B
 
-Dependencia acordada con el responsable del backend el 23 de octubre de 2026.
-Este documento no es un OpenAPI generado ni afirma que los endpoints ya estén en
-`develop`. `openapi/corteya-api.json` conserva la referencia real de la fase 7.
-Las respuestas acordadas se simulan en `test/fixtures/booking_backend.dart`.
-No hay fixtures de reservas ni una API simulada activada en la app de producción.
+El contrato 8B ya está implementado en `develop` de corteya-api (PR #7,
+commit de integración `29d0431`). Se verificaron los DTO y controladores locales:
+catálogo, cotización, detalle de señal, Mis citas y cancelación ya no son pendientes.
+Las respuestas de `test/fixtures/booking_backend.dart` son fixtures de pruebas;
+la app siempre usa la API real, sin simulaciones activadas en producción.
 
 ## Catálogo y ventana
 
@@ -92,9 +92,36 @@ refundStatus, cancellable y cancellableWithRefundUntil. El cliente combina estos
 datos con el estado más reciente del detalle; no interpreta el logo ni el slug de
 la barbería seleccionada como si pertenecieran a una cita de otra barbería.
 
-Cancelación depende del [PR #6 de corteya-api](https://github.com/geovannymcode/corteya-api/pull/6):
+Cancelación implementada en el [PR #6 de corteya-api](https://github.com/geovannymcode/corteya-api/pull/6):
 `POST /api/v1/appointments/{publicToken}/cancel`. Respuesta: publicToken, status,
 refundStatus, refundAmountCop y **message**. Tras la confirmación explícita, la app
 muestra ese message y recarga el estado. Nunca llama endpoints de staff para cancelar.
 
-Antes de probar en vivo, integrar el PR #6 y el contrato 8B en develop del backend.
+Las instrucciones para retomar Bre-B llegan dentro de
+`deposit.paymentInstructions` en el detalle real. La app admite esa ubicación y
+la ubicación superior del acuerdo inicial. El redirect de Wompi sigue siendo una
+configuración del despliegue: comprobar `corteya://pago` antes de probar pagos.
+
+## OpenAPI actualizado
+
+`openapi/corteya-api.json` se exportó de `http://localhost:8080/v3/api-docs`
+el 25 de octubre de 2026, usando el JAR local compilado con fase 9A.
+La fase 9A ya fue integrada a develop del backend mediante el
+[PR #8](https://github.com/geovannymcode/corteya-api/pull/8), verificado en GitHub.
+El JAR se arrancó desde su checkout local de fase 9A; no se cambió su rama ni se
+editaron sus fuentes.
+
+## Modo barbero (fase 9A)
+
+La fase 9 consume agenda, time-off, action-items y summary bajo
+`/api/v1/barbershops/{slug}/staff`, y las acciones de citas por ID interno.
+`/me.memberships[].barberId` permite enviar el barbero asignado al crear citas o
+bloqueos como BARBER. Las consultas sin filtro siguen acotadas por el backend;
+OWNER puede filtrar agenda por `barberId`.
+
+Asistencia: desde 15 minutos antes de `startsAt`. Inasistencia: estrictamente
+después de `startsAt`. La cancelación de staff requiere motivo y deja la señal
+recibida pendiente de devolución. Marcarla devuelta registra una devolución ya
+realizada; no transfiere dinero. Un pago tardío de una reserva vencida requiere
+cancelar la cita antes de registrar la devolución. Las autorizaciones y los
+estados los decide el backend; los errores se muestran con su mensaje.

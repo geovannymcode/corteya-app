@@ -13,6 +13,7 @@ import '../booking/payment.dart';
 import '../booking/appointments.dart';
 import '../booking/models.dart';
 import 'state.dart';
+import '../staff/screen.dart';
 
 class RouterRefresh extends ChangeNotifier {
   void refresh() => notifyListeners();
@@ -269,32 +270,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/pago',
         builder: (_, route) => const PaymentReturnScreen(),
       ),
-      GoRoute(
-        path: '/staff',
-        builder: (context, route) => Scaffold(
-          appBar: AppBar(
-            title: const Text('Modo barbero'),
-            actions: [
-              IconButton(
-                onPressed: () => context.push('/account'),
-                icon: const Icon(Icons.person_outline),
-              ),
-            ],
-          ),
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Pronto podrás administrar tu agenda aquí.'),
-                TextButton(
-                  onPressed: () => ref.read(appProvider.notifier).changeShop(),
-                  child: const Text('Cambiar de barbería'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      GoRoute(path: '/staff', builder: (context, route) => const StaffScreen()),
       GoRoute(
         path: '/:slug',
         builder: (_, route) => LinkEntry(slug: route.pathParameters['slug']!),

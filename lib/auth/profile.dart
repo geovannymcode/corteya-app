@@ -4,16 +4,17 @@ class Membership {
     required this.role,
     this.barbershopSlug,
     this.barbershopName,
+    this.barberId,
   });
   final String barbershopId, role;
-  // TODO backend: /me incluirá slug y nombre en el PR de membresías.
   // Se admiten ausentes para no atribuir permisos por error con el contrato anterior.
-  final String? barbershopSlug, barbershopName;
+  final String? barbershopSlug, barbershopName, barberId;
   factory Membership.fromJson(Map<String, dynamic> j) => Membership(
     barbershopId: j['barbershopId'] as String,
     role: j['role'] as String,
     barbershopSlug: j['barbershopSlug'] as String?,
     barbershopName: j['barbershopName'] as String?,
+    barberId: j['barberId'] as String?,
   );
 }
 
