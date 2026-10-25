@@ -44,5 +44,50 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+
+# Miscellaneous
+
+# IntelliJ related
+
+# VS Code
+# Se conserva para permitir configuraciones compartidas.
+#.vscode/
+
+# Flutter/Dart/Pub related
+.flutter-plugins
+.packages
+**/build/
+**/coverage/
+
+# Symbolication related
+
+# Obfuscation related
+
+# Android
+.gradle/
+/android/local.properties
+/android/key.properties
+**/android/**/.cxx/
+**/android/**/captures/
+*.jks
+*.keystore
+
+# iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/**/xcuserdata/
+
+# Secrets / Environment
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+*.bak
+
 # Overrides personales sin versionar
 env/*.local.json
