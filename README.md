@@ -96,28 +96,22 @@ vertical, bundle ID `com.geovannycode.corteya` y nombre CorteYa están configura
 
 ## TODO de fases posteriores
 
-- Integrar backend 8B y cancelación del PR #6 para probar reserva y pago reales.
-- Fase 9: modo barbero.
 - Push/Firebase cuando corresponda en el backend.
 - Despliegue: URLs reales, Universal Links/App Links, Associated Domains,
   `apple-app-site-association`, `assetlinks.json`, firma de publicación e iconos finales.
   Los QR HTTPS del host configurado ya se interpretan dentro del lector, pero el
   sistema operativo aún no abre enlaces HTTPS en la app.
-- Confirmar incorporación del PR de memberships del backend en `develop`.
 
 # Fase 8 — reserva, señal y Mis citas
 
-La rama de esta fase incorpora los tres commits de fase 7 con autorización del
-usuario; el PR #2 sigue siendo una revisión separada y no se hizo merge por él.
-Se reemplaza el placeholder de reserva por servicio → barbero → horario →
+El flujo de reserva usa servicio → barbero → horario →
 cotización → confirmación. Incluye pagos Bre-B/Wompi, espera, ticket, calendario,
 Mis citas y cancelación con confirmación.
 
-**Bloqueo de integración real:** requiere el contrato de corteya-api fase 8B y la
-cancelación del PR #6 en develop. La app no modifica ese repositorio ni inventa
-montos o políticas cuando faltan. Ver [contrato acordado](docs/backend-fase-8B.md).
-Mientras llega el backend, las pruebas usan mocks; los endpoints reales antiguos
-pueden mostrar estados de error o datos incompletos y no permiten completar el flujo.
+El contrato 8B y la cancelación ya están en develop de corteya-api; ver
+[contrato verificado](docs/backend-fase-8B.md). Las pruebas usan fixtures y la app
+consume siempre los endpoints reales. Para pagos Wompi comprobar las credenciales
+sandbox y el redirect `corteya://pago` configurado en el backend.
 
 Paquetes nuevos verificados en pub.dev: `url_launcher 6.3.3` y
 `add_2_calendar 3.1.1`. No se añadieron otros paquetes externos. Wompi sigue la
@@ -145,6 +139,18 @@ confirmación de cancelación, polling y regresiones de sesión/horarios de fase
 Quedan para dispositivo físico la experiencia del banco/Wompi, permisos y guardado
 del calendario; no se realizaron pagos reales ni cancelaciones de datos reales.
 
-TODO: modo barbero (fase 9), push/Firebase, acción propia de reprogramación,
+TODO: push/Firebase, acción propia de reprogramación,
 dominio/Universal Links y publicación. La reprogramación sigue siendo cancelar y
 reservar de nuevo.
+
+
+## Fase 9 — modo barbero
+
+OWNER y BARBER de la barbería actual entran a Agenda, Pendientes, Resumen y Cuenta.
+Incluye citas manuales, bloqueos, confirmación/rechazo de señales, asistencia,
+cancelación con motivo y registro de devoluciones. OWNER filtra por barbero y ve
+el desglose; BARBER queda limitado a su ámbito por el backend. El refresco de
+60 segundos se cancela al ocultar la pestaña/ruta o suspender la app.
+
+El OpenAPI se actualizó desde el backend local con fase 9A (PR #8 integrado).
+No se añadieron paquetes. Ver [cómo probar y pendientes](docs/fase-09-modo-barbero.md).
