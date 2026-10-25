@@ -89,6 +89,10 @@ void main() {
               },
             ],
           };
+        } else if (r.path.endsWith('/action-items')) {
+          data = {'pendingBreB': [], 'latePayments': [], 'pendingRefunds': []};
+        } else if (r.path.endsWith('/agenda') || r.path.endsWith('/time-off')) {
+          data = [];
         } else if (r.path.endsWith('/services')) {
           data = [
             {
@@ -126,8 +130,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(paths, contains('/api/v1/me'));
-      expect(find.text('Modo barbero'), staff ? findsOneWidget : findsNothing);
-      expect(find.text('Mi Barbería'), staff ? findsNothing : findsOneWidget);
+      expect(find.text('Agenda'), staff ? findsOneWidget : findsNothing);
+      expect(find.text('Mi Barbería'), findsOneWidget);
       if (!staff) {
         await tester.tap(find.text('Reservar cita'));
         await tester.pumpAndSettle();
